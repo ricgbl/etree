@@ -1,0 +1,71 @@
+Package: etree
+Title: Classification and Regression With Structured and Mixed-Type Data
+Version: 0.1.0
+Authors@R: c(
+    person("Riccardo",
+           "Giubilei",
+           role = c("aut", "cre"),
+           email = "riccardogbl@gmail.com",
+           comment = c(ORCID = "0000-0002-1674-4886")),
+    person("Tullia",
+           "Padellini",
+           role = "aut",
+           email = "tullia.padellini@bancaditalia.it",
+           comment = c(ORCID = "")),
+    person("Pierpaolo",
+           "Brutti",
+           role = "aut",
+           email = "pierpaolo.brutti@uniroma1.it",
+           comment = c(ORCID = "")),
+    person("Marco",
+           "Brandi",
+           role = "ctb",
+           email = "marco.brandi@uniroma1.it"),
+    person("Gabriel",
+           "Nespoli",
+           role = "ctb",
+           email = "gnmesquita1@gmail.com"),
+    person("Torsten",
+           "Hothorn",
+           role = "ctb",
+           email = "Torsten.Hothorn@R-project.org",
+           comment = c(ORCID = "0000-0001-8301-0471", "(partykit author)")),
+    person("Achim",
+           "Zeileis",
+           role = "ctb",
+           email = "Achim.Zeileis@R-project.org",
+           comment = c(ORCID = "0000-0003-0918-3766", "(partykit author)"))
+           )
+Description: Implementation of Energy Trees, a statistical model to perform 
+    classification and regression with structured and mixed-type data. This is
+    made possible by starting from the statistically sound structure of 
+    Conditional Trees, and using Energy Statistics to test independence between
+    data objects of possibly structured and possibly different nature. The type
+    of structured objects covered so far are functions and graphs. The package 
+    builds upon 'partykit' to provide functionalities for fitting, printing,
+    plotting, and predicting with Energy Trees. 
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
+Depends: R (>= 3.7.0)
+Imports: 
+    brainGraph,
+    cluster,
+    energy,
+    fda.usc (>= 2.0.0),
+    igraph,
+    MLmetrics,
+    NetworkDistance,
+    parallel,
+    partykit,
+    survival,
+    TDA,
+    usedist
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: knitr
