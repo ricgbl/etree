@@ -500,7 +500,7 @@ split_opt <- function(resp,
 
     pam_obj <- cluster::pam(cov_dist, k = 2, diss = TRUE)
     cl_index <- pam_obj$clustering
-    splitindex[as.integer(droplevels(new_cov))] <- cl_index
+    splitindex[as.integer(levels(droplevels(new_cov)))] <- cl_index
     #as.integer(names(cl_index))?
 
     medindex1 <- pam_obj$id.med[1]
