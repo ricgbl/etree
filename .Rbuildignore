@@ -1,2 +1,5 @@
 ^etree\.Rproj$
 ^\.Rproj\.user$
+^cran-comments\.md$
+^README\.Rmd$
+^NEWS\.Rmd$
