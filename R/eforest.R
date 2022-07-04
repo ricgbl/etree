@@ -4,7 +4,7 @@
 #' Random Energy Forest, depending on the value of the \code{random_covs}
 #' parameter.
 #'
-#' @param ntrees Number of Energy Trees to be built, i.e., the number of
+#' @param ntrees Number of Energy Trees to grow, i.e., the number of
 #'   bootstrap samples to be generated and used for fitting.
 #' @param ncores Number of cores to use, i.e., at most how many child processes
 #'   will be run simultaneously. Must be exactly 1 on Windows (which uses the
@@ -16,10 +16,13 @@
 #'   classification and Root Mean Square Percentage Error for regression. See
 #'   Details for further information and possible alternatives.
 #' @param random_covs Size of the random subset of covariates to choose from at
-#'   each split. If set to \code{NULL} (default), all the covariates are
-#'   considered each time, resulting in a bagging of Energy Trees. When
-#'   \code{random_covs} is an integer greater than 1 and less than the total
-#'   number of covariates, the model is a Random Energy Forest.
+#'   each split. If set to \code{NULL}, all the covariates are considered each 
+#'   time, resulting in a bagging of Energy Trees. When \code{random_covs} is an
+#'   integer greater than 1 and less than the total number of covariates, the 
+#'   model is a Random Energy Forest. By default, it is equal to \code{"auto"},
+#'   which implies the square root of the number of covariates for 
+#'   classification, or one third of the number of covariates for regression (in
+#'   both cases, rounded down to the nearest integer).
 #' @param verbose Logical indicating whether to print a one-line notification
 #'   for the conclusion of each tree's fitting process.
 #' @inheritParams etree
@@ -54,7 +57,7 @@
 #'
 #' @section Value:
 #' Object of class \code{"eforest"} with three elements: 1) \code{ensemble},
-#' which is itself a list gathering all the fitted trees; 2) \code{oob_score},
+#' which is a list gathering all the fitted trees; 2) \code{oob_score},
 #' an object of class \code{"numeric"} representing the OOB score computed using
 #' the performance metric defined through \code{perf_metric}; 3)
 #' \code{perf_metric}, an object of class \code{"character"} returning the
@@ -162,6 +165,9 @@ eforest <- function(response,
     } 
   }
   
+  # Set counter
+  counter <- 0L
+  
   # Number of observations
   nobs <- length(response)
   
@@ -190,18 +196,37 @@ eforest <- function(response,
   # Energy Tree fits for each bootstrap sample
   etree_boot_fits <- parallel::mclapply(boot_idx, function(b_i) {
     
-    # Covariates and response for this bootstrap sample
-    boot_cov_large <- lapply(covariates_large[1:2],
-                             function(cl) lapply(cl, function(cov) {
-                               if (class(cov) == 'data.frame') cov[b_i, ]
-                               else cov[b_i]
-                             }
-                             ))
+    # Covariates for this bootstrap sample
+    boot_cov_large <- list()
+    boot_cov_large$cov <- lapply(covariates_large$cov,
+                                 function(cov) {
+                                   if (inherits(cov, 'data.frame')) cov[b_i, ]
+                                   else cov[b_i]
+                                 }
+    )
+    # New covariates for this bootstrap sample
+    boot_cov_large$newcov <- lapply(covariates_large$newcov, function(ncov) {
+      if (is.null(attr(ncov, 'cov_type'))) ncov[b_i]
+      else {
+        ct <- attr(ncov, 'cov_type')
+        boot_ncov <- if (inherits(ncov, 'data.frame')) ncov[b_i, ] else ncov[b_i]
+        attr(boot_ncov, 'cov_type') <- ct
+        boot_ncov
+      }
+    })
     # Re-index newcov only if using 'cluster'
     if (split_type == 'cluster') {
-      boot_cov_large$newcov[[1]] <- factor(1:nobs)
-      boot_cov_large$newcov[[2]] <- factor(1:nobs)
+      boot_cov_large$newcov <- lapply(boot_cov_large$newcov, function (ncov) {
+        if (isFALSE(is.null(attr(ncov, 'cov_type')))) {
+          ct <- attr(ncov, 'cov_type')
+          ncov <- factor(1:nobs)
+          attr(ncov, 'cov_type') <- ct
+          ncov
+        } 
+        ncov
+      })
     }
+    # Distances (covariates) for this bootstrap sample
     boot_cov_large$dist <- lapply(covariates_large[[3]],
                                   function(cov_dist) {
                                     boot_dist <- usedist::dist_subset(cov_dist,
@@ -210,6 +235,7 @@ eforest <- function(response,
                                       usedist::dist_setNames(boot_dist, 1:nobs)
                                     return(boot_dist)
                                   })
+    # Response and distances (response) for this bootstrap sample
     resp_dist <- usedist::dist_subset(response_large$response_dist, b_i)
     resp_dist <- usedist::dist_setNames(resp_dist, 1:nobs)
     boot_resp_large <- list('response' = response[b_i],
@@ -232,7 +258,7 @@ eforest <- function(response,
     
     # Print counter if verbose is TRUE
     if (isTRUE(verbose)) {
-      if (isTRUE(exists('counter'))) counter <<- counter + 1 else counter <<- 1
+      counter <<- counter + 1
       print(paste('Fitted Energy Tree n.', counter))
     }
     
@@ -302,6 +328,7 @@ eforest <- function(response,
     pred_resp <- sapply(oob_pred_resp, mean)
     
     # OOB performance metric: various choices (default is 'RMSPE')
+    if (requireNamespace('MLmetrics', quietly = TRUE)) {
     oob_score <-
       switch(perf_metric,
              MAPE = MLmetrics::MAPE(pred_resp, response),
@@ -314,6 +341,9 @@ eforest <- function(response,
              RAE = MLmetrics::RAE(pred_resp, response),
              RMSE = MLmetrics::RMSE(pred_resp, response),
              RMLSE = MLmetrics::RMSLE(pred_resp, response))
+    } else {
+      warning("Package MLmetrics is needed for computing the OOB score.")
+    }
     
   }
   
