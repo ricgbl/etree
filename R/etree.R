@@ -142,6 +142,8 @@
 #'
 #' @examples
 #' 
+#' \dontrun{
+#' 
 #' ## Covariates
 #' nobs <- 100
 #' cov_num <- rnorm(nobs)
@@ -168,6 +170,8 @@
 #' print(etree_fit)
 #' plot(etree_fit)
 #' table(resp_cls, predict(etree_fit))
+#' 
+#' }
 #'
 #' @export
 
