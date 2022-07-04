@@ -46,7 +46,7 @@ findsplit <- function(response,
   
   # Control for newx not being void
   if ((split_type == 'coeff') &&
-      (class(x) == 'list') && all(sapply(x, class) == 'igraph') &&
+      (inherits(x, 'list')) && all(sapply(x, class) == 'igraph') &&
       (dim(newx)[2] == 0)) {
     
     # Throw warning: if x is selected (through distance) and newx is void because
@@ -490,7 +490,7 @@ split_opt <- function(resp,
     
     splitindex[new_cov] <- c(1, 2)
     
-    centroids <- if (class(cov) == 'fdata') {
+    centroids <- if (inherits(cov, 'fdata')) {
       list(c1 = cov[1, ], c2 = cov[2, ])
     } else {
       list(c1 = cov[[1]], c2 = cov[[2]])
@@ -504,9 +504,9 @@ split_opt <- function(resp,
     #as.integer(names(cl_index))?
 
     medindex1 <- pam_obj$id.med[1]
-    c1 <- if (class(cov) == 'fdata') cov[medindex1, ] else cov[[medindex1]]
+    c1 <- if (inherits(cov, 'fdata')) cov[medindex1, ] else cov[[medindex1]]
     medindex2 <- pam_obj$id.med[2]
-    c2 <- if (class(cov) == 'fdata') cov[medindex2, ] else cov[[medindex2]]
+    c2 <- if (inherits(cov, 'fdata')) cov[medindex2, ] else cov[[medindex2]]
     centroids <- list(c1 = c1, c2 = c2)
     
   }
@@ -518,7 +518,7 @@ split_opt <- function(resp,
 
 .select_traditional <- function(values, comb_logical, resp) {
   
-  if (class(resp) == 'factor') {
+  if (inherits(resp, 'factor')) {
     
     total_gini <- apply(comb_logical, 2,
                         function(c) {
