@@ -1,0 +1,386 @@
+---
+title: "eforest(): Random Forests With Energy Trees as Base Learners"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{eforest(): Random Forests With Energy Trees as Base Learners}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# Introduction
+
+<tt>etree</tt> is the R package where Energy Trees are implemented. The model
+allows to perform classification and regression with covariates that are
+possibly structured and of different types. 
+
+Energy Trees are used as base learners in ensemble methods that are the 
+equivalent of bagging and Random Forests with traditional decision trees. The
+two resulting models are bagging of Energy Trees and Random Energy Forests,
+respectively.
+
+This vignette explains how these two models can be used for classification and 
+regression tasks. Both models are implemented using the function 
+<tt>eforest()</tt>. The variables' types included in the examples are those 
+currently available in the package: numeric, nominal, functional, and in the
+form of graphs.
+
+The first thing to do to run the examples is loading the package <tt>etree</tt>.
+
+```{r setup}
+library(etree)
+```
+
+
+# Data generation
+
+We need data for our examples. We can use the same covariates for regression and
+classification, and then change only the response. Let us consider $100$
+observations divided into four equal-sized and disjoint groups
+$G_1, G_2, G_3, G_4$. The response variable for regression is defined as:
+
+$$Y^R_i \sim \begin{cases}
+      \mathcal{N}(0, 1) & \text{for} \; i \in G_1\\
+      \mathcal{N}(1, 1) & \text{for} \; i \in G_2\\
+      \mathcal{N}(2, 1) & \text{for} \; i \in G_3\\
+      \mathcal{N}(3, 1) & \text{for} \; i \in G_4
+    \end{cases}.$$
+
+The corresponding R object must be of class <tt>"numeric"</tt> to be correctly
+recognized by <tt>eforest()</tt> as a response variable for regression.
+
+```{r}
+# Set seed 
+set.seed(123)
+
+# Number of observation
+n_obs <- 100
+
+# Response variable for regression
+resp_reg <- c(rnorm(n_obs / 4, mean = 0, sd = 1),
+              rnorm(n_obs / 4, mean = 2, sd = 1),
+              rnorm(n_obs / 4, mean = 4, sd = 1),
+              rnorm(n_obs / 4, mean = 6, sd = 1))
+```
+
+The response for classification is a nominal variable measured at
+four different levels: $1, 2, 3, 4$. For each group, observations are randomly
+assigned one of the four levels. The probability distribution is different for 
+each group, and it gives the largest probability to the level equal to 
+the index of the group, uniformly allocating the rest to the other three levels.
+For example, the response variable for the first group is the following:
+
+$$Y^C_i \sim \begin{cases}
+      1 & p = 0.85 \\
+      2 & p = 0.05 \\
+      3 & p = 0.05 \\
+      4 & p = 0.05
+    \end{cases},
+    \quad \text{for} \; i \in G_1.$$
+    
+The same holds for $G_2, G_3, G_4$, except for switching each time the 
+probabilities in such a way that the most probable level matches the index of
+the group.
+
+The response variable for classification must be defined as a <tt>factor</tt> to
+be correctly identified by <tt>eforest()</tt>.
+
+```{r}
+# Response variable for classification
+resp_cls <- factor(c(sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                            prob = c(0.85, 0.05, 0.05, 0.05)),
+                     sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                            prob = c(0.05, 0.85, 0.05, 0.05)),
+                     sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                            prob = c(0.05, 0.05, 0.85, 0.05)),
+                     sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                            prob = c(0.05, 0.05, 0.05, 0.85))))
+```
+
+
+For both tasks, covariates are defined as follows:
+
+1. Numeric: 
+$$X_{1i} \sim \begin{cases} 
+\mathcal{U}[0, 0.55] & \text{for} \; i \in G_1\\
+\mathcal{U}[0.45, 1] & \text{for} \; i \in G_2 \cup G_3 \cup G_4
+\end{cases};$$
+
+2. Nominal: $$X_{2i} \sim \begin{cases} 
+\text{Bern}(0.1) & \text{for} \; i \in G_2\\
+\text{Bern}(0.9) & \text{for} \; i \in G_1 \cup G_3 \cup G_4
+\end{cases};$$
+
+3. Functions: $$X_{3i} \sim \begin{cases} 
+\mathcal{GP}(0, I_{100}) & \text{for} \; \in G_3\\
+\mathcal{GP}(1, I_{100}) & \text{for} \; \in G_1 \cup G_2 \cup G_4
+\end{cases},$$
+
+where $\mathcal{GP}$ is a Gaussian random process over $100$
+evaluation points from $0$ to $1$;
+
+4. Graphs: $$X_{4i} \sim \begin{cases} 
+\text{ER}(100, 0.1) & \text{for} \; \in G_4\\
+\text{ER}(100, 0.9) & \text{for} \; \in G_1 \cup G_2 \cup G_3
+\end{cases},$$
+
+where $\text{ER}(n, p)$ is an Erdős–Rényi random graph with $n$ vertices and $p$
+as connection probability.
+
+The structure of the generative process is such that we need at least three
+splits with respect to three different covariates to correctly rebuild the four
+groups.
+
+The set of covariates must be generated as a list, where each element is a
+different variable. Additionally, numeric variables must be numeric vectors, 
+nominal variable must be factors, functional variables must be objects of class
+<tt>"fdata"</tt>, and variables in the forms of graphs must be lists of objects
+having class <tt>"igraph"</tt>.
+
+```{r}
+# Numeric
+x1 <- c(runif(n_obs / 4, min = 0, max = 0.55),
+        runif(n_obs / 4 * 3, min = 0.45, max = 1))
+
+# Nominal
+x2 <- factor(c(rbinom(n_obs / 4, 1, 0.1),
+               rbinom(n_obs / 4, 1, 0.9),
+               rbinom(n_obs / 2, 1, 0.1)))
+
+# Functions
+x3 <- c(fda.usc::rproc2fdata(n_obs / 2, seq(0, 1, len = 100), sigma = 1),
+        fda.usc::rproc2fdata(n_obs / 4, seq(0, 1, len = 100), sigma = 1,
+                             mu = rep(1, 100)),
+        fda.usc::rproc2fdata(n_obs / 4, seq(0, 1, len = 100), sigma = 1))
+
+# Graphs
+x4 <- c(lapply(1:(n_obs / 4 * 3), function(j) igraph::sample_gnp(100, 0.1)),
+        lapply(1:(n_obs / 4), function(j) igraph::sample_gnp(100, 0.9)))
+
+# Covariates list
+cov_list <- list(X1 = x1, X2 = x2, X3 = x3, X4 = x4)
+
+```
+
+
+# Function eforest()
+
+Function <tt>eforest()</tt> allows implementing bagging of Energy Trees (BET)
+and Random Energy Forests (REF), depending on the value of the
+<tt>random_covs</tt> argument: if it is a positive integer smaller than the
+total number of covariates, the function goes for REF; if it is <tt>NULL</tt>
+(default), or equal to the number of covariates, BET is used.
+
+As for <tt>etree()</tt>, also <tt>eforest()</tt> is specified in the same way
+for regression and classification tasks, automatically distinguishing between
+the two based on the type of the response.
+
+Many arguments are inherited from <tt>etree()</tt>. The additional ones are:
+
+* <tt>ntrees</tt>, i.e., the number of Energy Trees to grow in the ensemble;
+* <tt>ncores</tt>, i.e., the number of cores to use;
+* <tt>perf_metric</tt>, i.e., the performance metric used to compute the
+Out-Of_Bag error;
+* <tt>random_covs</tt>, i.e., the size of the random subset of covariates to
+choose from at each split;
+* <tt>verbose</tt>, to visually keep track of the number of trees during the 
+fitting process.
+
+The structure of <tt>eforest()</tt> is such that it first generates 
+<tt>ntrees</tt> bootstrap samples and then calls <tt>etree()</tt> on each of 
+them. Then, it computes the Out-Of-Bag (OOB) score using the performance metric
+defined through <tt>perf_metric</tt>.
+
+The object returned by <tt>eforest()</tt> is of class <tt>"eforest"</tt> and
+it is composed of three elements: 
+
+* <tt>ensemble</tt>, i.e., a list containing all the fitted trees;
+* <tt>oob_score</tt>, i.e., the Out-Of-Bag score;
+* <tt>perf_metric</tt>, i.e., the performance metric used for computing the OOB.
+
+
+# Regression
+
+The first example is regression. The set of covariates is <tt>cov_list</tt> and
+the response variable is <tt>resp_reg</tt>. The most immediate way to grow an
+ensemble using <tt>eforest()</tt> is by specifying the response and the set of 
+covariates only. This corresponds to using the default values for the optional
+arguments. Here, we also add <tt>ntrees = 10</tt> to reduce the computational
+burden.
+
+```{r}
+# Quick fit
+ef_fit <- eforest(response = resp_reg,
+                  covariates = cov_list,
+                  ntrees = 10)
+```
+
+By default, <tt>eforest()</tt> uses <tt>minbucket = 1</tt> and 
+<tt>alpha = 1</tt> to grow larger and less correlated trees. It employs 
+<tt>"cluster"</tt> as <tt>split_type</tt> because it is usually faster. For 
+regression, it uses the Root Mean Square Percentage Error as performance metric,
+and <tt>random_covs</tt> is set to one third (rounded down) of the total number
+of covariates.
+
+The returned object, <tt>ef_fit</tt>, stores all the trees in its element
+<tt>ensemble</tt>, which is a list. Each tree in the list can be inspected,
+plotted, subsetted, and used for predictions just as any other tree produced 
+with <tt>etree()</tt> (in fact, also these trees are produced with 
+<tt>etree()</tt>!). As an example, we can plot the first tree.
+
+```{r, fig.dim = c(17, 8)}
+# Plot of a tree from the ensemble
+plot(ef_fit$ensemble[[1]])
+```
+
+The Out-Of-Bag score for the whole ensemble is stored in <tt>ef_fit</tt>'s
+element <tt>oob_score</tt>. The performance metric used to compute the OOB score
+can be retrieved from element <tt>perf_metric</tt>.
+
+```{r}
+# Retrieve performance metric
+ef_fit$perf_metric
+
+# OOB RMSPE for this ensemble
+ef_fit$oob_score
+```
+
+Finally, the ensemble can be used to make predictions using the function
+<tt>predict()</tt> on <tt>ef_fit</tt>, and possibly specifying a new set of 
+covariates using <tt>newdata</tt>. Any other information, such as the splitting
+strategy or the type of the task, is automatically retrieved from the fitted 
+object.
+
+Predictions are based either on the fitted values - if <tt>newdata</tt> is not
+provided - or on the new set of covariates - if <tt>newdata</tt> is specified.
+
+In both cases, each tree in <tt>ef_fit$ensemble</tt> is used to make predictions
+by calling <tt>predict()</tt> on it (with the same specification of 
+<tt>newdata</tt>). Then, for regression, individual trees' predictions for 
+single observations are combined by arithmetic mean.
+
+Let's start with the case where <tt>newdata</tt> is not provided.
+
+```{r}
+# Predictions from the fitted object
+pred <- predict(ef_fit)
+print(pred)
+```
+
+However, this case is rarely of practical utility because the model is usually
+evaluated using the OOB score.
+
+Let's see an example where predictions are calculated for a new set of 
+covariates. 
+
+```{r}
+# New set of covariates
+n_obs <- 40
+x1n <- c(runif(n_obs / 4, min = 0, max = 0.55),
+         runif(n_obs / 4 * 3, min = 0.45, max = 1))
+x2n <- factor(c(rbinom(n_obs / 4, 1, 0.1),
+                rbinom(n_obs / 4, 1, 0.9),
+                rbinom(n_obs / 2, 1, 0.1)))
+x3n <- c(fda.usc::rproc2fdata(n_obs / 2, seq(0, 1, len = 100), sigma = 1),
+         fda.usc::rproc2fdata(n_obs / 4, seq(0, 1, len = 100), sigma = 1,
+                              mu = rep(1, 100)),
+         fda.usc::rproc2fdata(n_obs / 4, seq(0, 1, len = 100), sigma = 1))
+x4n <- c(lapply(1:(n_obs / 4 * 3), function(j) igraph::sample_gnp(100, 0.1)),
+         lapply(1:(n_obs / 4), function(j) igraph::sample_gnp(100, 0.9)))
+new_cov_list <- list(X1 = x1n, X2 = x2n, X3 = x3n, X4 = x4n)
+
+# New response 
+new_resp_reg <- c(rnorm(n_obs / 4, mean = 0, sd = 1),
+                  rnorm(n_obs / 4, mean = 2, sd = 1),
+                  rnorm(n_obs / 4, mean = 4, sd = 1),
+                  rnorm(n_obs / 4, mean = 6, sd = 1))
+
+# Predictions
+new_pred <- predict(ef_fit,
+                    newdata = new_cov_list)
+print(new_pred)
+```
+
+We can compare the Mean Square Error between the response and the predicted
+values with that between the response and its average to see how predictions are
+on average closer to the actual values than the response.
+
+```{r}
+# MSE between the new response and its average
+mean((new_resp_reg - mean(new_resp_reg)) ^ 2)
+
+# MSE between the new response and predictions with the new set of covariates
+mean((new_resp_reg - new_pred) ^ 2)
+```
+
+
+# Classification 
+
+The second example is classification. The set of covariates is the same as 
+before, i.e., <tt>cov_list</tt>, while the response variable is 
+<tt>resp_cls</tt>. Also in this case, the most immediate fit can be obtained by
+calling <tt>eforest()</tt> and specifying the response and the set of covariates
+only. Here, we also set <tt>ntrees = 10</tt> to reduce the computational burden 
+and <tt>split_type = "coeff"</tt> to employ the other splitting strategy.
+
+```{r, fig.dim = c(7, 6)}
+# Quick fit
+ef_fit <- eforest(response = resp_cls,
+                  covariates = cov_list,
+                  ntrees = 10,
+                  split_type = 'coeff')
+```
+
+While everything else works as for regression, for classification tasks the 
+default performance metric is Balanced Accuracy, while <tt>random_covs</tt> is 
+set to the square root (rounded down) of the number of covariates.
+
+Also predictions are obtained in the same way as for regression, but we cover
+this part also for classification for the sake of completeness. Note that, for
+classification, individual trees' predictions for single observations are 
+aggregated by majority voting rule.
+
+```{r}
+# Predictions from the fitted object
+pred <- predict(ef_fit)
+print(pred)
+```
+
+To exemplify the use of <tt>predict()</tt> with <tt>newdata</tt>, we can use the
+new set of covariates generated for regression, coupling it with a new response
+variable for classification.
+
+```{r}
+# New response 
+new_resp_cls <- factor(c(sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                                prob = c(0.85, 0.05, 0.05, 0.05)),
+                         sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                                prob = c(0.05, 0.85, 0.05, 0.05)),
+                         sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                                prob = c(0.05, 0.05, 0.85, 0.05)),
+                         sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                                prob = c(0.05, 0.05, 0.05, 0.85))))
+
+# Predictions
+new_pred <- predict(ef_fit,
+                    newdata = new_cov_list)
+print(new_pred)
+
+# Confusion matrix between the new response and predictions from the fitted tree
+table(new_pred, new_resp_cls, dnn = c('Predicted', 'True'))
+
+# Misclassification error for predictions on the new set of covariates
+sum(new_pred != new_resp_cls) / length(new_resp_cls)
+```
+
+In this case, we obtain a misclassification error of 0.4 on test data, which 
+should be however taken with a grain of salt given the very small number of 
+trees that have been used in this toy example.
+

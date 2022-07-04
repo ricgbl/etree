@@ -42,7 +42,7 @@ Each element (i.e., variable) in the covariates list must have the same
 be used in the fitting process. If not provided, all observations are
 assumed to have weight equal to 1.}
 
-\item{ntrees}{Number of Energy Trees to be built, i.e., the number of
+\item{ntrees}{Number of Energy Trees to grow, i.e., the number of
 bootstrap samples to be generated and used for fitting.}
 
 \item{ncores}{Number of cores to use, i.e., at most how many child processes
@@ -84,10 +84,13 @@ classification and Root Mean Square Percentage Error for regression. See
 Details for further information and possible alternatives.}
 
 \item{random_covs}{Size of the random subset of covariates to choose from at
-each split. If set to \code{NULL} (default), all the covariates are
-considered each time, resulting in a bagging of Energy Trees. When
-\code{random_covs} is an integer greater than 1 and less than the total
-number of covariates, the model is a Random Energy Forest.}
+each split. If set to \code{NULL}, all the covariates are considered each
+time, resulting in a bagging of Energy Trees. When \code{random_covs} is an
+integer greater than 1 and less than the total number of covariates, the
+model is a Random Energy Forest. By default, it is equal to \code{"auto"},
+which implies the square root of the number of covariates for
+classification, or one third of the number of covariates for regression (in
+both cases, rounded down to the nearest integer).}
 
 \item{verbose}{Logical indicating whether to print a one-line notification
 for the conclusion of each tree's fitting process.}
@@ -127,7 +130,7 @@ documentation provides more information about their definition.
 \section{Value}{
 
 Object of class \code{"eforest"} with three elements: 1) \code{ensemble},
-which is itself a list gathering all the fitted trees; 2) \code{oob_score},
+which is a list gathering all the fitted trees; 2) \code{oob_score},
 an object of class \code{"numeric"} representing the OOB score computed using
 the performance metric defined through \code{perf_metric}; 3)
 \code{perf_metric}, an object of class \code{"character"} returning the
