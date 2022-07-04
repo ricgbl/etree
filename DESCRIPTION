@@ -1,5 +1,5 @@
 Package: etree
-Title: Classification and Regression With Structured and Mixed-Type Data
+Title: Classification and Regression with Structured and Mixed-Type Data
 Version: 0.1.0
 Authors@R: c(
     person("Riccardo",
@@ -37,18 +37,18 @@ Authors@R: c(
            comment = c(ORCID = "0000-0003-0918-3766", "(partykit author)"))
            )
 Description: Implementation of Energy Trees, a statistical model to perform 
-    classification and regression with structured and mixed-type data. This is
-    made possible by starting from the statistically sound structure of 
-    Conditional Trees, and using Energy Statistics to test independence between
-    data objects of possibly structured and possibly different nature. The type
-    of structured objects covered so far are functions and graphs. The package 
-    builds upon 'partykit' to provide functionalities for fitting, printing,
-    plotting, and predicting with Energy Trees. 
+    classification and regression with structured and mixed-type data. The
+    model has a similar structure to Conditional Trees, but brings in Energy
+    Statistics to test independence between variables that are possibly 
+    structured and of different nature. Currently, the package covers functions
+    and graphs as structured covariates. It also builds upon 'partykit' to
+    provide functionalities for fitting, printing, plotting, and predicting with
+    Energy Trees. 
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
 Depends: R (>= 3.7.0)
 Imports: 
     brainGraph,
@@ -56,7 +56,6 @@ Imports:
     energy,
     fda.usc (>= 2.0.0),
     igraph,
-    MLmetrics,
     NetworkDistance,
     parallel,
     partykit,
@@ -65,6 +64,7 @@ Imports:
     usedist
 Suggests: 
     knitr,
+    MLmetrics,
     rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
