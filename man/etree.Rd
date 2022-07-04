@@ -135,6 +135,8 @@ An object of class \code{"etree"}, \code{"constparty"}, and \code{"party"}.
 
 \examples{
 
+\dontrun{
+
 ## Covariates
 nobs <- 100
 cov_num <- rnorm(nobs)
@@ -159,6 +161,8 @@ etree_fit <- etree(response = resp_cls, covariates = cov_list)
 print(etree_fit)
 plot(etree_fit)
 table(resp_cls, predict(etree_fit))
+
+}
 
 }
 \references{

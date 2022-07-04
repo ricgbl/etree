@@ -17,11 +17,16 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-R package etree
+<tt>etree</tt> is the R package where Energy Trees are implemented. The model
+allows to  perform classification and regression with covariates that are 
+possibly structured and of different types. 
 
+This vignette includes two examples, one for classification and one for
+regression, where all the package's basic functionalities are explained. The
+variables' types included in the examples are those currently available in the 
+package: numeric, nominal, functional, and in the form of graphs.
 
-The first thing to do to set up for analysis is loading the package
-<tt>etree</tt>.
+The first thing to do to run the examples is loading the package <tt>etree</tt>.
 
 ```{r setup}
 library(etree)
@@ -30,45 +35,67 @@ library(etree)
 
 # Data generation
 
-We need to generate data for our examples. Along this vignette, we focus on
-classification and regression tasks. To make things easy, we can use the same
-generation process in the two cases and just change the type of the response. We
-consider $100$ observations divided into four equal-sized and disjoint groups
+We need data for our examples. We can use the same covariates for regression and
+classification, and then change only the response. Let us consider $100$
+observations divided into four equal-sized and disjoint groups
 $G_1, G_2, G_3, G_4$. The response variable for regression is defined as:
 
-$$Y_i \sim \begin{cases}
+$$Y^R_i \sim \begin{cases}
       \mathcal{N}(0, 1) & \text{for} \; i \in G_1\\
       \mathcal{N}(1, 1) & \text{for} \; i \in G_2\\
       \mathcal{N}(2, 1) & \text{for} \; i \in G_3\\
       \mathcal{N}(3, 1) & \text{for} \; i \in G_4
-    \end{cases}$$
+    \end{cases}.$$
 
-Hence, we create the corresponding R object, which should be of class
-<tt>"numeric"</tt> to be correctly recognized by <tt>etree()</tt> as a response
-variable for regression.
+The corresponding R object must be of class <tt>"numeric"</tt> to be correctly
+recognized by <tt>etree()</tt> as a response variable for regression.
 
 ```{r}
 # Set seed 
-set.seed(3)
+set.seed(123)
 
 # Number of observation
 n_obs <- 100
 
 # Response variable for regression
 resp_reg <- c(rnorm(n_obs / 4, mean = 0, sd = 1),
-              rnorm(n_obs / 4, mean = 1, sd = 1),
               rnorm(n_obs / 4, mean = 2, sd = 1),
-              rnorm(n_obs / 4, mean = 3, sd = 1))
+              rnorm(n_obs / 4, mean = 4, sd = 1),
+              rnorm(n_obs / 4, mean = 6, sd = 1))
 ```
 
-The response variable used for classification is a nominal variable measured at
-four different levels corresponding to the four groups. It should be defined as
-a <tt>factor</tt> to be correctly identified by <tt>etree()</tt>.
+The response for classification is a nominal variable measured at
+four different levels: $1, 2, 3, 4$. For each group, observations are randomly
+assigned one of the four levels. The probability distribution is different for 
+each group, and it gives the largest probability to the level equal to 
+the index of the group, uniformly allocating the rest to the other three levels.
+For example, the response variable for the first group is the following:
+
+$$Y^C_i \sim \begin{cases}
+      1 & p = 0.85 \\
+      2 & p = 0.05 \\
+      3 & p = 0.05 \\
+      4 & p = 0.05
+    \end{cases},
+    \quad \text{for} \; i \in G_1.$$
+    
+The same holds for $G_2, G_3, G_4$, except for switching each time the 
+probabilities in such a way that the most probable level matches the index of
+the group.
+
+The response variable for classification must be defined as a <tt>factor</tt> to
+be correctly identified by <tt>etree()</tt>.
 
 ```{r}
-# Response variable for regression
-resp_cls <- factor(rep(c(1, 2, 3, 4),
-                       each = n_obs / 4))
+# Response variable for classification
+resp_cls <- factor(c(sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                            prob = c(0.85, 0.05, 0.05, 0.05)),
+                     sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                            prob = c(0.05, 0.85, 0.05, 0.05)),
+                     sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                            prob = c(0.05, 0.05, 0.85, 0.05)),
+                     sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                            prob = c(0.05, 0.05, 0.05, 0.85))))
 ```
 
 
@@ -76,54 +103,59 @@ For both tasks, covariates are defined as follows:
 
 1. Numeric: 
 $$X_{1i} \sim \begin{cases} 
-\mathcal{U}[0, 0.55] & \text{for} \; i \in G_1 \cup G_2\\
-\mathcal{U}[0.45, 1] & \text{for} \; i \in G_3 \cup G_4
+\mathcal{U}[0, 0.55] & \text{for} \; i \in G_1\\
+\mathcal{U}[0.45, 1] & \text{for} \; i \in G_2 \cup G_3 \cup G_4
 \end{cases};$$
 
 2. Nominal: $$X_{2i} \sim \begin{cases} 
-\mathcal{Bin}(0.1) & \text{for} \; i \in G_1 \cup G_2\\
-\mathcal{Bin}(0.9) & \text{for} \; i \in G_3 \cup G_4
+\text{Bern}(0.1) & \text{for} \; i \in G_2\\
+\text{Bern}(0.9) & \text{for} \; i \in G_1 \cup G_3 \cup G_4
 \end{cases};$$
 
-3. Functions: $X_{3i}$ is distributed as a Gaussian random process over $100$
-evaluation points from $0$ to $1$, with mean $0$ and the identity matrix as
-covariance matrix, for $i \in G_1 \cup G_3$; as a Gaussian random process over
-$100$ evaluation points from $0$ to $1$, with mean $1$ and the identity matrix
-as covariance matrix, for $i \in G_2 \cup G_4$;
+3. Functions: $$X_{3i} \sim \begin{cases} 
+\mathcal{GP}(0, I_{100}) & \text{for} \; \in G_3\\
+\mathcal{GP}(1, I_{100}) & \text{for} \; \in G_1 \cup G_2 \cup G_4
+\end{cases},$$
 
-4. Graphs: $X_{4i}$ is an Erdős–Rényi random graph with $100$ vertices and
-connection probability equal to $0.1$ for $i \in G_1 \cup G_3$, and an
-Erdős–Rényi random graph with $100$ vertices and connection probability equal to
-$0.9$ for $i \in G_2 \cup G_4$.
+where $\mathcal{GP}$ is a Gaussian random process over $100$
+evaluation points from $0$ to $1$;
 
-The set of covariates can be generated by recalling the requirements of
-<tt>etree()</tt>: it has to be a list, where each element is a different
-variable; numeric variables should be numeric vectors, nominal variable should
-be factors, functional variables should be objects of class <tt>"fdata"</tt>,
-and variables in the forms of graphs should be lists of objects having class
-<tt>"igraph"</tt>.
+4. Graphs: $$X_{4i} \sim \begin{cases} 
+\text{ER}(100, 0.1) & \text{for} \; \in G_4\\
+\text{ER}(100, 0.9) & \text{for} \; \in G_1 \cup G_2 \cup G_3
+\end{cases},$$
+
+where $\text{ER}(n, p)$ is an Erdős–Rényi random graph with $n$ vertices and $p$
+as connection probability.
+
+The structure of the generative process is such that we need at least three
+splits with respect to three different covariates to correctly rebuild the four
+groups.
+
+The set of covariates must be generated as a list, where each element is a
+different variable. Additionally, numeric variables must be numeric vectors, 
+nominal variable must be factors, functional variables must be objects of class
+<tt>"fdata"</tt>, and variables in the forms of graphs must be lists of objects
+having class <tt>"igraph"</tt>.
 
 ```{r}
 # Numeric
-x1 <- c(runif(n_obs / 2, min = 0, max = 0.55),
-        runif(n_obs / 2, min = 0.45, max = 1))
+x1 <- c(runif(n_obs / 4, min = 0, max = 0.55),
+        runif(n_obs / 4 * 3, min = 0.45, max = 1))
 
 # Nominal
-x2 <- factor(c(rbinom(n_obs / 2, 1, 0.1),
-               rbinom(n_obs / 2, 1, 0.9)))
+x2 <- factor(c(rbinom(n_obs / 4, 1, 0.1),
+               rbinom(n_obs / 4, 1, 0.9),
+               rbinom(n_obs / 2, 1, 0.1)))
 
 # Functions
-x3 <- c(fda.usc::rproc2fdata(n_obs / 4, seq(0, 1, len = 100), sigma = 1),
+x3 <- c(fda.usc::rproc2fdata(n_obs / 2, seq(0, 1, len = 100), sigma = 1),
         fda.usc::rproc2fdata(n_obs / 4, seq(0, 1, len = 100), sigma = 1,
                              mu = rep(1, 100)),
-        fda.usc::rproc2fdata(n_obs / 4, seq(0, 1, len = 100), sigma = 1),
-        fda.usc::rproc2fdata(n_obs / 4, seq(0, 1, len = 100), sigma = 1,
-                             mu = rep(1, 100)))
+        fda.usc::rproc2fdata(n_obs / 4, seq(0, 1, len = 100), sigma = 1))
 
 # Graphs
-x4 <- c(lapply(1:(n_obs / 4), function(j) igraph::sample_gnp(100, 0.1)),
-        lapply(1:(n_obs / 4), function(j) igraph::sample_gnp(100, 0.9)),
-        lapply(1:(n_obs / 4), function(j) igraph::sample_gnp(100, 0.1)),
+x4 <- c(lapply(1:(n_obs / 4 * 3), function(j) igraph::sample_gnp(100, 0.1)),
         lapply(1:(n_obs / 4), function(j) igraph::sample_gnp(100, 0.9)))
 
 # Covariates list
@@ -136,26 +168,28 @@ cov_list <- list(X1 = x1, X2 = x2, X3 = x3, X4 = x4)
 # Regression
 
 The first example is regression. The set of covariates is <tt>cov_list</tt> and
-the response variable is <tt>resp_reg</tt>. First, we perform a "quick fit",
-taking advantage of <tt>etree()</tt>'s default parameters. Then, we see the
-effects of changing the main ones, and we do so by inspecting the corresponding
-plots. Finally, we use a fitted Energy Trees to explore other useful
-functionalities such as printing and predicting.
+the response variable is <tt>resp_reg</tt>. We start with a "quick fit", which 
+implies using <tt>etree()</tt>'s default parameters. Then, we explore how 
+changing the most important ones affects the size and the structure of the
+resulting trees. Finally, we use a fitted tree to explore other fundamental
+utilities such as printing and predicting.
 
 ## Quick fit
 
-A quick fit can be simply obtained using <tt>etree()</tt> and specifying the set
-of covariates and the response variable only.
+The quickest way to grow an Energy Tree is as simple as using <tt>etree()</tt>
+and specifying the response and the set of covariates only.
 
 ```{r}
+# Quick fit
 etree_fit <- etree(response = resp_reg,
                    covariates = cov_list)
 ```
 
-Let's plot the fitted tree, which is as simple as calling <tt>plot()</tt> on 
-<tt>etree_fit</tt>.
+Calling <tt>plot()</tt> on the fitted object <tt>etree_fit</tt> allows
+visualizing the tree.
 
-```{r, fig.dim = c(9, 5)}
+```{r, fig.dim = c(7.5, 6)}
+# Plot
 plot(etree_fit)
 ```
 
@@ -187,73 +221,82 @@ split point with respect to the selected component of the splitting covariate
 when <tt>split_type = "coeff"</tt>, or alternatively the size of the
 corresponding kid node when <tt>split_type = "cluster"</tt>.
 
-Descending into the detail of the previous fit, we have five terminal nodes as
-opposed to four. This gives us the chance to explore some of the optional
-parameters to see how they work and possibly to get the expected result.
+In the specific fit, not only the partitioning into four groups is correctly
+retrieved, but also the average response variable in each group is consistent
+with the mean of the distributions used to generate data. 
+
+Now we explore how the main optional parameters work and their effects on the 
+structure and size of the resulting trees.
 
 
 ## Changing parameters
 
-Inspecting the latest plot, we suspect that node $4$ should not be split. In
-other words, the tree should be pruned. We can achieve this either by reducing
-the parameter <tt>alpha</tt> or by increasing the parameter <tt>minbucket</tt>.
-We go for the latter, choosing the rule-of-thumb value of $10\%$ of the sample
-size.
+The two parameters directly influencing the tree size are <tt>minbucket</tt> and
+<tt>alpha</tt>.
 
+The first one, <tt>minbucket</tt>, sets the minimum number of observations each
+node must contain. When it grows, the tree gets smaller; and viceversa. Let's 
+see what happens if we set it equal to its minimum, i.e., 1.
 
-```{r}
+```{r, fig.dim = c(9, 6)}
+# Fit with smaller minbucket
 etree_fit1 <- etree(response = resp_reg,
                     covariates = cov_list,
-                    minbucket = 10)
-```
+                    minbucket = 1)
 
-Let's take a look at its plot.
-
-```{r, fig.dim = c(7.5, 5)}
+# Plot
 plot(etree_fit1)
 ```
 
-...et voilà! Four terminal nodes, as expected. Increasing <tt>minbucket</tt> has
-allowed us to avoid the unnecessary split of node $4$.
+We actually get a larger tree with five terminal nodes. The additional one
+derives from the split of node 2 into two nodes with size 26 and 1,
+respectively. Increasing <tt>minbucket</tt> to any value would result in
+avoiding that split.
 
-It could be difficult to obtain the same result reducing <tt>alpha</tt>,
-especially noticing how small the p-values in the first plot are. <!-- with
-alpha=0.03, you actually avoid that split, but you also delete node 7's -->
-Instead, we can increase it to see how the tree is affected.
+The other parameter controlling the tree size is <tt>alpha</tt>, which is the
+significance level in the Energy tests of independence used for variable 
+selection. When <tt>alpha</tt> decreases, we can expect that the tree gets
+smaller, because we would only consider stronger associations between the 
+covariates and the response; and viceversa.
 
-```{r}
+We can increase <tt>alpha</tt> to its maximum, which is 1, to see what happens.
+
+```{r, fig.dim = c(12, 7)}
+# Fit with larger alpha
 etree_fit2 <- etree(response = resp_reg,
                     covariates = cov_list,
                     alpha = 1)
-```
 
-```{r, fig.dim = c(16, 7)}
+# Plot
 plot(etree_fit2)
 ```
 
-We obtain a much larger tree with $9$ terminal nodes. Splits are made with
-respect to all four variables. Consequently, we can notice the full spectrum of
-colors for covariates that are accepted by <tt>etree()</tt>.
+We obtain a much larger tree with $7$ terminal nodes. Splits are made with
+respect to all four covariates, hence showing the full spectrum of colors for 
+the variables' types that are currently accepted by <tt>etree()</tt>.
 
 Another important argument is <tt>split_type</tt>, which defines the splitting
-method. By default it is equal to <tt>"coeff"</tt>, so we can change it to
-<tt>"cluster"</tt> to see what happens.
+method. By default it is equal to <tt>"coeff"</tt>, so we can now try to fit a
+tree using <tt>"cluster"</tt>.
 
-
-```{r}
+```{r, fig.dim = c(7.5, 5)}
+# Fit with 'cluster'
 etree_fit3 <- etree(response = resp_reg,
                     covariates = cov_list,
                     split_type = 'cluster')
-```
 
-```{r, fig.dim = c(7.5, 5)}
+# Plot
 plot(etree_fit3)
 ```
 
 In this case, we obtain a tree that is structurally equivalent and has the same
 hierarchy among covariates as the one produced with <tt>split_type =
-"coeff"</tt>. The tiny differences in the the terminal nodes' size are due to
-the different splitting method for covariates $X_3$ and $X_4$.
+"coeff"</tt>. The tiny differences in the terminal nodes' size are due to
+the change in the splitting method for covariates $X_3$ and $X_4$.
+
+This suggests that the two splitting strategies produce consistent and sensible
+results, which are nonetheless different, so it does make sense to grow trees
+with both of them and compare the output.
 
 The plot allows visualizing two differences that are specific to the case of
 <tt>split_type = "cluster"</tt>: the text below the square box is always the 
@@ -265,45 +308,49 @@ node's size.
 ## Print and other utilities
 
 Fitted trees can be printed by using <tt>print()</tt>. The output produced for
-the fit with four terminal nodes is the following.
+the quick fit is the following.
 
 ```{r}
-print(etree_fit1)
+# Print the fitted tree
+print(etree_fit)
 ```
 
 Generally speaking, the first part of the output is given by the <tt>Model
 formula</tt>. The second one is the textual tree structure provided in
 <tt>Fitted party</tt>. The ids of the nodes are between square brackets, and
-they are followed, with the only exception of the root, by the name of splitting
+they are followed, with the only exception of the root, by the name of the splitting
 covariate (with the addition of the id of the selected component if the
-covariate is structured and <tt>split_type = "coeff"</tt>). What follows and
-ends before the semicolon is the information on the split that is provided on
+covariate is structured and <tt>split_type = "coeff"</tt>). What follows, ending
+before the semicolon, is the information on the split that is provided on
 the edges in plots. After that, the estimated value of the response in the
-terminal node is provided together with the node size, and an error for the
+terminal node is provided together with the node size, plus an error for the
 estimate (weighted MSE for regression, weighted misclassification error for
 classification). At the end of the output, both the number of inner and terminal
 nodes is returned.
 
-In the specific case, there are three inner nodes and four terminal nodes, with
-the latter correctly reflecting the division into groups. Estimated values for
-the response in the four terminal nodes are quite close to the theoretical
-values $0$, $1$, $2$ and $3$.
+In the specific case, there are three inner nodes and four terminal nodes. Here,
+we can see more precisely that estimated values for the response in the terminal
+nodes are very close ($\pm 0.2$) to the theoretical values.
 
-The fitted tree can be subset using the <tt>[</tt> and <tt>[[</tt> operators,
-which yield equivalent results.
+The tree can be subsetted using the <tt>[</tt> and <tt>[[</tt> operators, which
+yield equivalent results. The integer between parentheses denotes the id of the
+node from which the subtree is considered.
 
 ```{r}
-print(etree_fit1[2])
+# Print a subtree
+print(etree_fit[5])
 ```
 
 ```{r}
-print(etree_fit1[[2]])
+# Equivalent method to print a subtree
+print(etree_fit[[5]])
 ```
 
-These subtrees can be also plotted.
+The subtree can be also plotted.
 
-```{r, fig.dim = c(7.5, 5)}
-plot(etree_fit1[2])
+```{r, fig.dim = c(7, 4)}
+# Plot a subtree
+plot(etree_fit[5])
 ```
 
 Other useful functions are <tt>nodeids()</tt> and <tt>nodeapply()</tt>, which
@@ -311,75 +358,211 @@ are kept unchanged from their <tt>partykit</tt> version. The first one allows
 retrieving the ids of the nodes. By default, it returns all the ids.
 
 ```{r}
-nodeids(etree_fit1)
+# Get all nodes' ids
+nodeids(etree_fit)
 ```
 
-It can also be used to obtain only the terminal nodes' ids.
+We can also use it to get the terminal nodes' ids only.
 
 ```{r}
-nodeids(etree_fit1, terminal = TRUE)
+# Get all terminal nodes' ids
+nodeids(etree_fit, terminal = TRUE)
 ```
 
-Finally, one can get the ids of the nodes that belong to a subtree starting from
-a given node.
+We can retrieve the ids of the nodes in the subtree that starts from a given
+node.
 
 ```{r}
-nodeids(etree_fit1, from = 2)
+# Get nodes' ids of a subtree
+nodeids(etree_fit, from = 5)
 ```
 
 Function <tt>nodeapply()</tt> applies a function <tt>FUN</tt> to the nodes
-specified via the <tt>ids</tt> argument. This can be useful for extracting the
-<tt>info</tt> possibly contained in the nodes, such as the pvalues for the
-splitting covariate in inner nodes.
+specified via the <tt>ids</tt> argument. For example, this can be useful for 
+extracting the <tt>info</tt> possibly contained in the nodes, such as the 
+pvalues for the splitting covariate in the inner nodes.
 
 ```{r}
 # Select inner nodes' ids
-tnodes <- nodeids(etree_fit1, terminal = TRUE)
+tnodes <- nodeids(etree_fit, terminal = TRUE)
 nodes <- 1:max(tnodes)
 inodes <- nodes[-tnodes]
 
 # Retrieve pvalues
-nodeapply(etree_fit1, ids = inodes, FUN = function(n) n$info$pvalue)
+nodeapply(etree_fit, ids = inodes, FUN = function (n) n$info$pvalue)
 ```
 
-Finally, the dimensions of the tree can be inspected and retrieved using three
-functions giving the total number of nodes (<tt>length()</tt>), the depth of the
-tree (<tt>depth()</tt>), and the width of the tree (<tt>width()</tt>).
+The dimensions of the tree can be inspected using three functions giving the
+total number of nodes (<tt>length()</tt>), the depth of the tree 
+(<tt>depth()</tt>), and the width of the tree (<tt>width()</tt>).
 
 ```{r}
-length(etree_fit1)
-depth(etree_fit1)
-width(etree_fit1)
+# Total number of nodes
+length(etree_fit)
+
+# Depth
+depth(etree_fit)
+
+# Width
+width(etree_fit)
 ```
 
 
 ## Predict
-<!-- sum((resp_reg[1:25] - mean(resp_reg[1:25]))^2) -->
-<!-- sum((predict(etree_fit)[1:25] - mean(predict(etree_fit)[1:25]))^2) -->
+
+Predictions are obtained in a very classical way: by calling <tt>predict()</tt>
+on the fitted Energy Tree.
+
+They are based either on the fitted values - if <tt>newdata</tt> is not provided
+- or on the new set of covariates - if <tt>newdata</tt> is specified.
+
+All the necessary information, such as the splitting strategy or the type of the
+task, is automatically retrieved from the fitted object.
+
+```{r}
+# Predictions from the fitted object
+pred <- predict(etree_fit)
+print(pred)
+```
+
+The division into nodes obtained partitioning with Energy Trees reduce the
+response's variability with respect to the original data.
+Indeed, the Mean Square Error between the response and the predicted values is
+more than $80\%$ smaller than that between the response and its average.
+
+```{r}
+# MSE between the response and its average
+mean((resp_reg - mean(resp_reg)) ^ 2)
+
+# MSE between the response and predictions from the fitted tree
+mean((resp_reg - pred) ^ 2)
+```
+
+To understand if this behavior is robust, we can perform the same comparison
+using a new set of data. We generate $40$ observations using the same mechanism
+as before, and then we use the new set of covariates to get predictions using
+<tt>predict()</tt> with <tt>newdata</tt>.
+
+```{r}
+# New set of covariates
+n_obs <- 40
+x1n <- c(runif(n_obs / 4, min = 0, max = 0.55),
+         runif(n_obs / 4 * 3, min = 0.45, max = 1))
+x2n <- factor(c(rbinom(n_obs / 4, 1, 0.1),
+                rbinom(n_obs / 4, 1, 0.9),
+                rbinom(n_obs / 2, 1, 0.1)))
+x3n <- c(fda.usc::rproc2fdata(n_obs / 2, seq(0, 1, len = 100), sigma = 1),
+         fda.usc::rproc2fdata(n_obs / 4, seq(0, 1, len = 100), sigma = 1,
+                              mu = rep(1, 100)),
+         fda.usc::rproc2fdata(n_obs / 4, seq(0, 1, len = 100), sigma = 1))
+x4n <- c(lapply(1:(n_obs / 4 * 3), function(j) igraph::sample_gnp(100, 0.1)),
+         lapply(1:(n_obs / 4), function(j) igraph::sample_gnp(100, 0.9)))
+new_cov_list <- list(X1 = x1n, X2 = x2n, X3 = x3n, X4 = x4n)
+
+# New response 
+new_resp_reg <- c(rnorm(n_obs / 4, mean = 0, sd = 1),
+                  rnorm(n_obs / 4, mean = 2, sd = 1),
+                  rnorm(n_obs / 4, mean = 4, sd = 1),
+                  rnorm(n_obs / 4, mean = 6, sd = 1))
+
+# Predictions
+new_pred <- predict(etree_fit,
+                    newdata = new_cov_list)
+print(new_pred)
+```
+
+The comparison in terms of MSE is as follows.
+
+```{r}
+# MSE between the new response and its average
+mean((new_resp_reg - mean(new_resp_reg)) ^ 2)
+
+# MSE between the new response and predictions with the new set of covariates
+mean((new_resp_reg - new_pred) ^ 2)
+```
+
+Hence, the behavior is confirmed also with a new set of data.
 
 
 # Classification 
 
-## Quick fit
+The second example is classification. The set of covariates is the same as 
+before, i.e., <tt>cov_list</tt>, while the response variable is 
+<tt>resp_cls</tt>. Also in this case, a quick fit can be obtained by calling
+<tt>etree()</tt> and specifying the response and the set of covariates.
 
-```{r}
+```{r, fig.dim = c(7, 6)}
+# Quick fit
 etree_fit <- etree(response = resp_cls,
                    covariates = cov_list)
-```
 
-```{r, fig.dim = c(7.5, 5)}
+# Plot
 plot(etree_fit)
 ```
-<!-- comment on the plot differences with regression -->
 
-## Print
+The only difference with respect to plots for regression tasks is the content of
+the terminal panels: in the case of classification, they show the distribution 
+of the response variable for each node using bar plots.
 
+In the specific example, the structure and size of the tree is coherent with 
+the true data partition made of four groups, and the levels are almost perfectly
+recognized.
 
-## Predict
+For classification, we will not see any change for the default values of the
+optional parameters since they work in the same way as for regression.
 
+Also printing and the other utilities work in the same way we saw before.
 
+Predictions are obtained as for regression, but we cover this part also for 
+classification for the sake of completeness. 
 
+```{r}
+# Predictions from the fitted object
+pred <- predict(etree_fit)
+print(pred)
+```
 
+We can use the confusion matrix between the response and the predicted values, 
+and a scalar measure such as the misclassification error, to evaluate the 
+predictive ability of the fitted tree.
 
+```{r}
+# Confusion matrix between the response and predictions from the fitted tree
+table(pred, resp_cls, dnn = c('Predicted', 'True'))
 
-# Energy Forests
+# Misclassification error for predictions from the fitted tree
+sum(pred != resp_cls) / length(resp_cls)
+```
+
+The tree produces sensible predictions for fitted data. We can verify how 
+it generalizes to a new set of covariates. We can use the one generated for 
+regression, but we still need to draw a new response variable for 
+classification.
+
+```{r}
+# New response 
+new_resp_cls <- factor(c(sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                                prob = c(0.85, 0.05, 0.05, 0.05)),
+                         sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                                prob = c(0.05, 0.85, 0.05, 0.05)),
+                         sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                                prob = c(0.05, 0.05, 0.85, 0.05)),
+                         sample(x = 1:4, size = n_obs / 4, replace = TRUE, 
+                                prob = c(0.05, 0.05, 0.05, 0.85))))
+
+# Predictions
+new_pred <- predict(etree_fit,
+                    newdata = new_cov_list)
+print(new_pred)
+
+# Confusion matrix between the new response and predictions from the fitted tree
+table(new_pred, new_resp_cls, dnn = c('Predicted', 'True'))
+
+# Misclassification error for predictions on the new set of covariates
+sum(new_pred != new_resp_cls) / length(new_resp_cls)
+```
+
+Taking into account that the set of covariates and the response variable have 
+been generated using a fuzzy scheme both for fitting and testing data, 
+predictions using the new set can be considered satisfactory.
+
