@@ -11,6 +11,5 @@ structure to Conditional Trees, but brings in Energy Statistics to test
 independence between variables that are possibly structured and of different
 nature. Currently, the package covers functions and graphs as structured
 covariates. It builds upon 'partykit' to provide functionalities for fitting,
-printing, plotting, and predicting with Energy Trees. Energy Trees are
-described in Giubilei et al. (2022) \url{arXiv:2207.04430}.
+printing, plotting, and predicting with Energy Trees.
 }

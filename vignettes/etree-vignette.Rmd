@@ -570,7 +570,7 @@ predictions using the new set can be considered satisfactory.
 # References
 
 R. Giubilei, T. Padellini, P. Brutti (2022). Energy Trees: Regression and 
-Classification With Structured and Mixed-Type Covariates. 
+Classification With Structured and Mixed-Type Covariates. arXiv preprint.
 https://arxiv.org/pdf/2207.04430.pdf.
 
 T. Hothorn, A. Zeileis (2015). partykit: A Modular Toolkit for Recursive 

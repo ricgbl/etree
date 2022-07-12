@@ -6,8 +6,7 @@
 #' independence between variables that are possibly structured and of different
 #' nature. Currently, the package covers functions and graphs as structured 
 #' covariates. It builds upon 'partykit' to provide functionalities for fitting,
-#' printing, plotting, and predicting with Energy Trees. Energy Trees are 
-#' described in Giubilei et al. (2022) <arXiv:2207.04430>. 
+#' printing, plotting, and predicting with Energy Trees. 
 #' 
 #' @rawNamespace import(partykit, except = c(partynode, kidids_node,
 #'   fitted_node, party, predict, predict_party, edge_simple, `[`, `[[`,

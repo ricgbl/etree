@@ -186,7 +186,8 @@ table(resp_cls, predict(etree_fit))
 }
 \references{
 R. Giubilei, T. Padellini, P. Brutti (2022). Energy Trees: Regression and
-Classification With Structured and Mixed-Type Covariates. \url{arXiv:2207.04430}.
+Classification With Structured and Mixed-Type Covariates. arXiv preprint.
+https://arxiv.org/pdf/2207.04430.pdf.
 
 S. Carmi, S. Havlin, S. Kirkpatrick, Y. Shavitt, and E. Shir (2007). A model
 of internet topology using k-shell decomposition. \emph{Proceedings of the

@@ -388,5 +388,5 @@ trees that have been used in this toy example.
 # References
 
 R. Giubilei, T. Padellini, P. Brutti (2022). Energy Trees: Regression and 
-Classification With Structured and Mixed-Type Covariates. 
+Classification With Structured and Mixed-Type Covariates. arXiv preprint.
 https://arxiv.org/pdf/2207.04430.pdf.
