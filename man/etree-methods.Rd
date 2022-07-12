@@ -52,6 +52,12 @@
 
 \item{i}{Integer specifying the root of the subtree to extract.}
 }
+\value{
+The \code{print()} method generates a textual representation of the tree.
+\code{length()} returns the number of nodes in the tree, \code{depth()} the
+depth of the tree and \code{width()} the number of terminal nodes. The subset
+methods extract subtrees starting from a given node.
+}
 \description{
 Methods for objects of class \code{"etree"}.
 }
@@ -72,7 +78,7 @@ Methods for objects of class \code{"etree"}.
 
 \examples{
 
-\dontrun{
+\donttest{
 
 ## Covariates
 nobs <- 100

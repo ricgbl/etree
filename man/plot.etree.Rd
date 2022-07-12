@@ -75,6 +75,9 @@ return.}
 
 \item{...}{Additional arguments.}
 }
+\value{
+No return value, called for side effects (plotting the tree).
+}
 \description{
 Returns the plot of an object of class \code{"etree"}.
 }

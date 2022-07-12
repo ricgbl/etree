@@ -23,6 +23,9 @@ nodeids(obj, ...)
 \item{terminal}{Logical indicating whether only identifiers of terminal nodes
 should be returned (\code{FALSE} by default).}
 }
+\value{
+An integer vector of node identifiers.
+}
 \description{
 Extract unique identifiers from inner and terminals nodes of \code{"etree"}
 or \code{"partynode"} objects.
@@ -34,14 +37,9 @@ or \code{"partynode"} objects.
 \item \code{etree}: nodeids() method for objects of class "etree".
 }}
 
-\section{Value}{
-
-An integer vector of node identifiers.
-}
-
 \examples{
 
-\dontrun{
+\donttest{
 
 ## Covariates
 nobs <- 100

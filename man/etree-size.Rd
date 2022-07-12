@@ -7,11 +7,17 @@
 \title{Size of Energy Trees}
 \usage{
 depth(x, ...)
+
+width(x, ...)
 }
 \arguments{
-\item{x}{An Energy Tree object.}
+\item{x}{An object of class \code{etree}.}
 
 \item{...}{Additional arguments.}
+}
+\value{
+\code{depth()} returns the depth of the tree and \code{width()} gives the
+number of terminal nodes.
 }
 \description{
 Depth and width of an Energy Tree.
@@ -19,5 +25,7 @@ Depth and width of an Energy Tree.
 \section{Functions}{
 \itemize{
 \item \code{depth}: Depth of the three.
+
+\item \code{width}: Number of terminal nodes in the tree.
 }}
 

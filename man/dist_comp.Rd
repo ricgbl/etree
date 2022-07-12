@@ -24,6 +24,9 @@ See Details to find out which distance is used in each case.}
 \item{lp}{Integer specifying which norm should be used to compute the
 distances for functional data.}
 }
+\value{
+Object of class \code{"dist"} containing the pairwise distances.
+}
 \description{
 Compute pairwise distances starting from single objects containing the
 original univariate observations.
@@ -42,11 +45,6 @@ The distances used in each case are the following:
 \code{\link[TDA:wasserstein]{wasserstein()}} with default options;
 }
 }
-\section{Value}{
-
-Object of class \code{"dist"} containing the pairwise distances.
-}
-
 \examples{
 
 # Number of observations

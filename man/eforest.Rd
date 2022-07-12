@@ -95,6 +95,14 @@ both cases, rounded down to the nearest integer).}
 \item{verbose}{Logical indicating whether to print a one-line notification
 for the conclusion of each tree's fitting process.}
 }
+\value{
+Object of class \code{"eforest"} with three elements: 1) \code{ensemble},
+which is a list gathering all the fitted trees; 2) \code{oob_score},
+an object of class \code{"numeric"} representing the OOB score computed using
+the performance metric defined through \code{perf_metric}; 3)
+\code{perf_metric}, an object of class \code{"character"} returning the
+performance metric used for computations.
+}
 \description{
 Fits an Energy Forest, in the form of either a bagging of Energy Trees or a
 Random Energy Forest, depending on the value of the \code{random_covs}
@@ -127,19 +135,9 @@ namely, Root Mean Square Percentage Error. Other available options are
 function from the package \code{\link[MLmetrics]{MLmetrics}}, whose
 documentation provides more information about their definition.
 }
-\section{Value}{
-
-Object of class \code{"eforest"} with three elements: 1) \code{ensemble},
-which is a list gathering all the fitted trees; 2) \code{oob_score},
-an object of class \code{"numeric"} representing the OOB score computed using
-the performance metric defined through \code{perf_metric}; 3)
-\code{perf_metric}, an object of class \code{"character"} returning the
-performance metric used for computations.
-}
-
 \examples{
 
-\dontrun{
+\donttest{
 
 ## Covariates
 nobs <- 100
@@ -163,7 +161,7 @@ mean((resp_reg - predict(eforest_fit)) ^ 2)
 ## Classification ##
 eforest_fit <- eforest(response = resp_cls, covariates = cov_list, ntrees = 20)
 print(eforest_fit$ensemble[[20]])
-plot(eforest_fit[[20]])
+plot(eforest_fit$ensemble[[20]])
 table(resp_cls, predict(eforest_fit))
 }
 

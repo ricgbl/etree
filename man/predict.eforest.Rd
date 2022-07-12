@@ -26,6 +26,10 @@ combined (see Details) and returned.}
 
 \item{...}{Additional arguments.}
 }
+\value{
+Predictions, in the form of a factor for classification or as a numeric
+vector for regression.
+}
 \description{
 Compute predictions for objects of class \code{"eforest"} (i.e., as returned
 by \code{\link[etree:eforest]{eforest()}}).
@@ -41,9 +45,3 @@ predictions by calling \code{\link[etree:predict.etree]{predict()}} on it
 predictions for any single observation are combined by majority voting rule
 for classification or by arithmetic mean for regression.
 }
-\section{Value}{
-
-Predictions, in the form of a factor for classification or as a numeric
-vector for regression.
-}
-

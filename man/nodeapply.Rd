@@ -27,6 +27,9 @@ returned.}
 \code{"partynode"} objects (default) or not, in which case it is applied to
 subsets of \code{"etree"} objects.}
 }
+\value{
+A list of results whose length is given by \code{length(ids)}.
+}
 \description{
 Returns a list of values obtained by applying a function to \code{"etree"} or
 \code{"partynode"} objects.
@@ -45,14 +48,9 @@ node slot. If \code{by_node} is \code{FALSE}, it is applied to the
 \item \code{etree}: nodeapply() method for objects of class "etree".
 }}
 
-\section{Value}{
-
-A list of results whose length is given by \code{length(ids)}.
-}
-
 \examples{
 
-\dontrun{
+\donttest{
 
 ## Covariates
 nobs <- 100

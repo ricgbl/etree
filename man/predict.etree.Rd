@@ -30,6 +30,10 @@ variables will not be permuted.}
 
 \item{...}{Additional arguments.}
 }
+\value{
+Predictions, in the form of a factor for classification or as a numeric
+vector for regression.
+}
 \description{
 Compute predictions for objects of class \code{"etree"} (i.e., fitted Energy
 Trees as returned by \code{\link[etree:etree]{etree()}}, or as contained in
@@ -47,9 +51,3 @@ equivalent representation for the covariates in \code{newdata} when
 \code{split_type = "coeff"}), are automatically retrieved from the object of
 class \code{"etree"}.
 }
-\section{Value}{
-
-Predictions, in the form of a factor for classification or as a numeric
-vector for regression.
-}
-
