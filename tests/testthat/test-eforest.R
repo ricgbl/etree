@@ -17,7 +17,7 @@ load(test_path("testdata", "covs_cls.rda"))
 
 test_that("eforest works for regression", {
   expect_warning(eforest_fit <- eforest(resp_reg, covs_reg,
-                                        split_type = 'coeff', ntrees = 10),
+                                        split_type = 'coeff', ntrees = 15),
                  'No names available for covariates. Numbers are used instead.')
   expect_true(all(sapply(eforest_fit$ensemble, 
                          function(t) 'constparty' %in% class(t))))
@@ -29,7 +29,7 @@ test_that("eforest works for regression", {
 
 test_that("eforest works for classification", {
   expect_warning(eforest_fit <- eforest(resp_cls, covs_cls, 
-                                        split_type = 'cluster', ntrees = 10),
+                                        split_type = 'cluster', ntrees = 15),
                  'No names available for covariates. Numbers are used instead.')
   expect_true(all(sapply(eforest_fit$ensemble, 
                          function(t) 'constparty' %in% class(t))))
@@ -76,20 +76,20 @@ test_that("eforest does not work with wrong input", {
 test_that("input values have the expected effect", {
   
   # ntrees
-  ntrees <- 10
+  ntrees <- 15
   suppressWarnings(eforest_fit <- eforest(resp_reg, covs_reg, ntrees = ntrees))
   expect_length(eforest_fit$ensemble, ntrees)
   
   # perf_metric
-  suppressWarnings(eforest_fit <- eforest(resp_reg, covs_reg, ntrees = 10,
+  suppressWarnings(eforest_fit <- eforest(resp_reg, covs_reg, ntrees = 15,
                                           perf_metric = NULL))
   expect_identical(eforest_fit$perf_metric, 'RMSPE')
-  suppressWarnings(eforest_fit <- eforest(resp_cls, covs_cls, ntrees = 10,
+  suppressWarnings(eforest_fit <- eforest(resp_cls, covs_cls, ntrees = 15,
                                           perf_metric = NULL))
   expect_identical(eforest_fit$perf_metric, 'BAcc')
   
   # verbose
-  expect_output(suppressWarnings(eforest(resp_reg, covs_reg, ntrees = 10,
+  expect_output(suppressWarnings(eforest(resp_reg, covs_reg, ntrees = 15,
                                          verbose = TRUE)))
   
 })
@@ -110,7 +110,7 @@ new_resp_cls <- data_cls$resp[new_idx]
 new_covs_cls <- lapply(data_cls$covs, function(cov) cov[new_idx])
 
 test_that("predict.eforest works for regression", {
-  expect_warning(eforest_fit <- eforest(resp_reg, covs_reg, ntrees = 10,
+  expect_warning(eforest_fit <- eforest(resp_reg, covs_reg, ntrees = 15,
                                         split_type = 'cluster'),
                  'No names available for covariates. Numbers are used instead.')
   pred <- predict(eforest_fit)
@@ -119,7 +119,7 @@ test_that("predict.eforest works for regression", {
 })
 
 test_that("predict.eforest with newdata works for regression", {
-  expect_warning(eforest_fit <- eforest(resp_reg, covs_reg, ntrees = 10,
+  expect_warning(eforest_fit <- eforest(resp_reg, covs_reg, ntrees = 15,
                                         split_type = 'cluster'),
                  'No names available for covariates. Numbers are used instead.')
   pred <- predict(eforest_fit, newdata = new_covs_reg)
@@ -128,7 +128,7 @@ test_that("predict.eforest with newdata works for regression", {
 })
 
 test_that("predict.eforest works for classification", {
-  expect_warning(eforest_fit <- eforest(resp_cls, covs_cls, ntrees = 10,
+  expect_warning(eforest_fit <- eforest(resp_cls, covs_cls, ntrees = 15,
                                         split_type = 'cluster'),
                  'No names available for covariates. Numbers are used instead.')
   pred <- predict(eforest_fit)
@@ -137,7 +137,7 @@ test_that("predict.eforest works for classification", {
 })
 
 test_that("predict.eforest with newdata works for classification", {
-  expect_warning(eforest_fit <- eforest(resp_cls, covs_cls, ntrees = 10,
+  expect_warning(eforest_fit <- eforest(resp_cls, covs_cls, ntrees = 15,
                                         split_type = 'cluster'),
                  'No names available for covariates. Numbers are used instead.')
   pred <- predict(eforest_fit, newdata = new_covs_cls)
