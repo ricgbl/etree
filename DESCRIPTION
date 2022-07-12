@@ -10,8 +10,7 @@ Authors@R: c(
     person("Tullia",
            "Padellini",
            role = "aut",
-           email = "tullia.padellini@bancaditalia.it",
-           comment = c(ORCID = "")),
+           email = "tullia.padellini@bancaditalia.it"),
     person("Pierpaolo",
            "Brutti",
            role = "aut",
@@ -41,9 +40,10 @@ Description: Implementation of Energy Trees, a statistical model to perform
     model has a similar structure to Conditional Trees, but brings in Energy
     Statistics to test independence between variables that are possibly 
     structured and of different nature. Currently, the package covers functions
-    and graphs as structured covariates. It also builds upon 'partykit' to
+    and graphs as structured covariates. It builds upon 'partykit' to
     provide functionalities for fitting, printing, plotting, and predicting with
-    Energy Trees. 
+    Energy Trees. Energy Trees are described in Giubilei et al. (2022) 
+    <arXiv:2207.04430>. 
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
@@ -69,3 +69,5 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
+URL: https://github.com/ricgbl/etree
+BugReports: https://github.com/ricgbl/etree/issues

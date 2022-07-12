@@ -1,13 +1,13 @@
 #' etree: Classification and Regression With Structured and Mixed-Type Data
 #' 
 #' Implementation of Energy Trees, a statistical model to perform classification
-#' and regression with structured and mixed-type data. This is made possible by
-#' starting from the statistically sound structure of Conditional Trees, and
-#' using Energy Statistics to test independence between data objects of possibly
-#' structured and possibly different nature. The type of structured objects
-#' covered so far are functions and graphs. The package builds upon 'partykit'
-#' to provide functionalities for fitting, printing, plotting, and predicting
-#' with Energy Trees.
+#' and regression with structured and mixed-type data. The model has a similar 
+#' structure to Conditional Trees, but brings in Energy Statistics to test 
+#' independence between variables that are possibly structured and of different
+#' nature. Currently, the package covers functions and graphs as structured 
+#' covariates. It builds upon 'partykit' to provide functionalities for fitting,
+#' printing, plotting, and predicting with Energy Trees. Energy Trees are 
+#' described in Giubilei et al. (2022) <arXiv:2207.04430>. 
 #' 
 #' @rawNamespace import(partykit, except = c(partynode, kidids_node,
 #'   fitted_node, party, predict, predict_party, edge_simple, `[`, `[[`,
