@@ -14,7 +14,7 @@
 #'   subsets of \code{"etree"} objects.
 #' @param ... Additional arguments.
 #' 
-#' @section Value:
+#' @returns
 #' A list of results whose length is given by \code{length(ids)}.
 #' 
 #' @details 
@@ -26,7 +26,7 @@
 #' 
 #' @examples
 #' 
-#' \dontrun{
+#' \donttest{
 #' 
 #' ## Covariates
 #' nobs <- 100
@@ -128,12 +128,12 @@ nodeapply.party <- nodeapply.etree <-
 #'   should be returned (\code{FALSE} by default).
 #' @param ... Additional arguments.
 #' 
-#' @section Value:
+#' @returns
 #' An integer vector of node identifiers.
 #' 
 #' @examples
 #' 
-#' \dontrun{
+#' \donttest{
 #' 
 #' ## Covariates
 #' nobs <- 100

@@ -4,8 +4,12 @@
 #' 
 #' @aliases depth width
 #' 
-#' @param x An Energy Tree object.
+#' @param x An object of class \code{etree}.
 #' @param ... Additional arguments.
+#' 
+#' @returns
+#' \code{depth()} returns the depth of the tree and \code{width()} gives the 
+#' number of terminal nodes.
 #' 
 #' @name etree-size
 NULL
@@ -17,7 +21,7 @@ depth <- function(x, ...)
   UseMethod("depth")
 
 
-# @describeIn etree-size Number of terminal nodes in the tree.
+#' @describeIn etree-size Number of terminal nodes in the tree.
 #' @export
 width <- function(x, ...)
   UseMethod("width")

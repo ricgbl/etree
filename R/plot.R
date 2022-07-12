@@ -51,6 +51,9 @@
 #'
 # @examples
 #'
+#' @returns 
+#' No return value, called for side effects (plotting the tree).
+#'
 #' @method plot etree
 #' @export
 

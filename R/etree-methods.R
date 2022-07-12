@@ -20,9 +20,15 @@
 #'   \code{depth()} or not (default).
 #' @param ... Additional arguments.
 #' 
+#' @returns
+#' The \code{print()} method generates a textual representation of the tree.
+#' \code{length()} returns the number of nodes in the tree, \code{depth()} the 
+#' depth of the tree and \code{width()} the number of terminal nodes. The subset
+#' methods extract subtrees starting from a given node.
+#' 
 #' @examples
 #' 
-#' \dontrun{
+#' \donttest{
 #' 
 #' ## Covariates
 #' nobs <- 100

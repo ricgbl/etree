@@ -35,7 +35,7 @@
 #'   \code{\link[TDA:wasserstein]{wasserstein()}} with default options;
 #' } 
 #'    
-#' @section Value:
+#' @returns
 #' Object of class \code{"dist"} containing the pairwise distances.
 #' 
 #' @references 

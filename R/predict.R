@@ -38,7 +38,7 @@
 #' \code{split_type = "coeff"}), are automatically retrieved from the object of
 #' class \code{"etree"}.
 #' 
-#' @section Value:
+#' @returns
 #' Predictions, in the form of a factor for classification or as a numeric
 #' vector for regression.
 #' 

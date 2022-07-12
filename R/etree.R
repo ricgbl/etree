@@ -57,7 +57,8 @@
 #' classification and regression is automatically made depending on the nature
 #' of the response variable.
 #' 
-#' Energy Trees are a recursive partitioning tree-based model built upon
+#' Energy Trees (Giubilei et al., 2022) are a recursive partitioning tree-based 
+#' model built upon
 #' Conditional Trees (Hothorn et al., 2006). At each step of Energy Trees'
 #' iterative procedure, an Energy test of independence (Szekely et al., 2007) is
 #' performed between the response variable and each of the J covariates. If the
@@ -107,12 +108,36 @@
 #'
 #' @section Value:
 #' An object of class \code{"etree"}, \code{"constparty"}, and \code{"party"}.
+#' It stores all the information about the fitted tree. Its elements can be
+#' individually accessed using the \code{$} operator. Their names and content
+#' are the following:
+#' \itemize{
+#' \item \code{node}: a \code{\link[partykit]{partynode}} object representing
+#' the basic structure of the tree;
+#' \item \code{data}: a \code{list} containing the data used for the fitting
+#' process. Traditional covariates are included in their original form, while
+#' structured covariates are stored in the form of components if
+#' \code{split_type = "coeff"} or as a \code{factor} whose levels go from 1 to 
+#' the total number of observations if \code{split_type = "cluster"};
+#' \item \code{fitted}: a \code{data.frame} whose number of rows coincides with 
+#' the sample size. It includes the fitted terminal node identifiers (in 
+#' \code{"(fitted)"}) and the response values of all observations (in 
+#' \code{"(response)"});
+#' \item \code{terms}: a \code{\link[stats]{terms}} object;
+#' \item \code{names} (optional): names of the nodes in the tree. They can be
+#' set using a \code{character} vector: if its length is smaller than the number
+#' of nodes, the remaining nodes have missing names; if its length is larger,
+#' exceeding names are ignored.
+#' }
 #' 
 #' @seealso 
 #' \code{\link[partykit:ctree]{ctree()}} for the \code{partykit} implementation of
 #' Conditional Trees (Hothorn et al., 2006).
 #' 
 #' @references 
+#' 
+#' R. Giubilei, T. Padellini, P. Brutti (2022). Energy Trees: Regression and 
+#' Classification With Structured and Mixed-Type Covariates. <arXiv:2207.04430>.
 #' 
 #' S. Carmi, S. Havlin, S. Kirkpatrick, Y. Shavitt, and E. Shir (2007). A model
 #' of internet topology using k-shell decomposition. \emph{Proceedings of the
@@ -141,9 +166,7 @@
 #' 35(6):2769-2794.
 #'
 #' @examples
-#' 
-#' \dontrun{
-#' 
+#' \donttest{
 #' ## Covariates
 #' nobs <- 100
 #' cov_num <- rnorm(nobs)
@@ -170,7 +193,6 @@
 #' print(etree_fit)
 #' plot(etree_fit)
 #' table(resp_cls, predict(etree_fit))
-#' 
 #' }
 #'
 #' @export

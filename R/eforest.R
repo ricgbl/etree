@@ -55,7 +55,7 @@
 #' function from the package \code{\link[MLmetrics]{MLmetrics}}, whose
 #' documentation provides more information about their definition.
 #'
-#' @section Value:
+#' @returns
 #' Object of class \code{"eforest"} with three elements: 1) \code{ensemble},
 #' which is a list gathering all the fitted trees; 2) \code{oob_score},
 #' an object of class \code{"numeric"} representing the OOB score computed using
@@ -65,7 +65,7 @@
 #'
 #' @examples
 #' 
-#' \dontrun{
+#' \donttest{
 #' 
 #' ## Covariates
 #' nobs <- 100
@@ -91,7 +91,7 @@
 #' ## Classification ##
 #' eforest_fit <- eforest(response = resp_cls, covariates = cov_list, ntrees = 20)
 #' print(eforest_fit$ensemble[[20]])
-#' plot(eforest_fit[[20]])
+#' plot(eforest_fit$ensemble[[20]])
 #' table(resp_cls, predict(eforest_fit))
 #' }
 #'
@@ -189,7 +189,6 @@ eforest <- function(response,
                          'response_dist' = dist_comp(response))
   
   # Generate B bootstrap samples
-  set.seed(12345)
   boot_idx <- lapply(1:ntrees,
                      function(b) sample.int(nobs, replace = TRUE))
   
@@ -394,7 +393,7 @@ eforest <- function(response,
 #' predictions for any single observation are combined by majority voting rule
 #' for classification or by arithmetic mean for regression.
 #' 
-#' @section Value:
+#' @returns
 #' Predictions, in the form of a factor for classification or as a numeric
 #' vector for regression.
 #'
