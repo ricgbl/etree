@@ -17,16 +17,16 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-<tt>etree</tt> is the R package where Energy Trees are implemented. The model
-allows to perform classification and regression with covariates that are
-possibly structured and of different types. 
+<tt>etree</tt> is the R package where Energy Trees (Giubilei et al., 2022) are 
+implemented. The model allows to perform classification and regression with 
+covariates that are possibly structured and of different types. 
 
 Energy Trees are used as base learners in ensemble methods that are the 
 equivalent of bagging and Random Forests with traditional decision trees. The
 two resulting models are bagging of Energy Trees and Random Energy Forests,
 respectively.
 
-This vignette explains how these two models can be used for classification and 
+This vignette explains how these two models can be used in R for classification and 
 regression tasks. Both models are implemented using the function 
 <tt>eforest()</tt>. The variables' types included in the examples are those 
 currently available in the package: numeric, nominal, functional, and in the
@@ -212,22 +212,23 @@ The first example is regression. The set of covariates is <tt>cov_list</tt> and
 the response variable is <tt>resp_reg</tt>. The most immediate way to grow an
 ensemble using <tt>eforest()</tt> is by specifying the response and the set of 
 covariates only. This corresponds to using the default values for the optional
-arguments. Here, we also add <tt>ntrees = 10</tt> to reduce the computational
-burden.
+arguments. Here, we add <tt>ntrees = 12</tt> to reduce the computational burden
+and change the performance metric using <tt>perf_metric = 'MSE'</tt> (the default
+is <tt>RMSPE</tt> for Root Mean Square Percentage Error).
 
 ```{r}
 # Quick fit
 ef_fit <- eforest(response = resp_reg,
                   covariates = cov_list,
-                  ntrees = 10)
+                  ntrees = 12,
+                  perf_metric = 'MSE')
 ```
 
 By default, <tt>eforest()</tt> uses <tt>minbucket = 1</tt> and 
 <tt>alpha = 1</tt> to grow larger and less correlated trees. It employs 
 <tt>"cluster"</tt> as <tt>split_type</tt> because it is usually faster. For 
-regression, it uses the Root Mean Square Percentage Error as performance metric,
-and <tt>random_covs</tt> is set to one third (rounded down) of the total number
-of covariates.
+regression, <tt>random_covs</tt> is set to one third (rounded down) of the total
+number of covariates.
 
 The returned object, <tt>ef_fit</tt>, stores all the trees in its element
 <tt>ensemble</tt>, which is a list. Each tree in the list can be inspected,
@@ -235,9 +236,9 @@ plotted, subsetted, and used for predictions just as any other tree produced
 with <tt>etree()</tt> (in fact, also these trees are produced with 
 <tt>etree()</tt>!). As an example, we can plot the first tree.
 
-```{r, fig.dim = c(17, 8)}
+```{r, fig.dim = c(25, 11)}
 # Plot of a tree from the ensemble
-plot(ef_fit$ensemble[[1]])
+plot(ef_fit$ensemble[[4]])
 ```
 
 The Out-Of-Bag score for the whole ensemble is stored in <tt>ef_fit</tt>'s
@@ -248,7 +249,7 @@ can be retrieved from element <tt>perf_metric</tt>.
 # Retrieve performance metric
 ef_fit$perf_metric
 
-# OOB RMSPE for this ensemble
+# OOB MSE for this ensemble
 ef_fit$oob_score
 ```
 
@@ -327,14 +328,14 @@ The second example is classification. The set of covariates is the same as
 before, i.e., <tt>cov_list</tt>, while the response variable is 
 <tt>resp_cls</tt>. Also in this case, the most immediate fit can be obtained by
 calling <tt>eforest()</tt> and specifying the response and the set of covariates
-only. Here, we also set <tt>ntrees = 10</tt> to reduce the computational burden 
+only. Here, we also set <tt>ntrees = 12</tt> to reduce the computational burden 
 and <tt>split_type = "coeff"</tt> to employ the other splitting strategy.
 
 ```{r, fig.dim = c(7, 6)}
 # Quick fit
 ef_fit <- eforest(response = resp_cls,
                   covariates = cov_list,
-                  ntrees = 10,
+                  ntrees = 12,
                   split_type = 'coeff')
 ```
 
@@ -342,10 +343,9 @@ While everything else works as for regression, for classification tasks the
 default performance metric is Balanced Accuracy, while <tt>random_covs</tt> is 
 set to the square root (rounded down) of the number of covariates.
 
-Also predictions are obtained in the same way as for regression, but we cover
-this part also for classification for the sake of completeness. Note that, for
-classification, individual trees' predictions for single observations are 
-aggregated by majority voting rule.
+Predictions are obtained using the same commands as for regression. However,
+internally, individual trees' predictions for single observations are aggregated
+by majority voting rule.
 
 ```{r}
 # Predictions from the fitted object
@@ -380,7 +380,13 @@ table(new_pred, new_resp_cls, dnn = c('Predicted', 'True'))
 sum(new_pred != new_resp_cls) / length(new_resp_cls)
 ```
 
-In this case, we obtain a misclassification error of 0.4 on test data, which 
+In this case, we obtain a misclassification error of 0.225 on test data, which 
 should be however taken with a grain of salt given the very small number of 
 trees that have been used in this toy example.
 
+
+# References
+
+R. Giubilei, T. Padellini, P. Brutti (2022). Energy Trees: Regression and 
+Classification With Structured and Mixed-Type Covariates. 
+https://arxiv.org/pdf/2207.04430.pdf.
