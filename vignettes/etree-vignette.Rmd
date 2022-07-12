@@ -17,9 +17,9 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-<tt>etree</tt> is the R package where Energy Trees are implemented. The model
-allows to  perform classification and regression with covariates that are 
-possibly structured and of different types. 
+<tt>etree</tt> is the R package where Energy Trees (Giubilei et al., 2022) are 
+implemented. The model allows to  perform classification and regression with 
+covariates that are possibly structured and of different types. 
 
 This vignette includes two examples, one for classification and one for
 regression, where all the package's basic functionalities are explained. The
@@ -194,7 +194,8 @@ plot(etree_fit)
 ```
 
 This is a good place to stop and comment the main features of <tt>etree</tt>'s
-plots. Many of them descend from the <tt>partykit</tt> version: 
+plots. Many of them descend from the <tt>partykit</tt> (Hothorn and Zeileis, 
+2015) version: 
 
 * the number in the square box is the id of the node;
 * the text below the square box is the name of the variable selected for
@@ -565,4 +566,14 @@ sum(new_pred != new_resp_cls) / length(new_resp_cls)
 Taking into account that the set of covariates and the response variable have 
 been generated using a fuzzy scheme both for fitting and testing data, 
 predictions using the new set can be considered satisfactory.
+
+# References
+
+R. Giubilei, T. Padellini, P. Brutti (2022). Energy Trees: Regression and 
+Classification With Structured and Mixed-Type Covariates. 
+https://arxiv.org/pdf/2207.04430.pdf.
+
+T. Hothorn, A. Zeileis (2015). partykit: A Modular Toolkit for Recursive 
+Partytioning in R. *Journal of Machine Learning Research*, 
+16(1):3905--3909.
 
