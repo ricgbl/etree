@@ -298,7 +298,7 @@ eforest <- function(response,
     
     # Predicted response: majority voting rule
     pred_resp <- factor(sapply(oob_pred_resp,
-                               function(i) {
+                               function (i) {
                                  if (length(i) == 0) return(NA) 
                                  else names(which.max(table(i)))
                                } 
@@ -306,6 +306,12 @@ eforest <- function(response,
     
     # OOB performance metric (measured via BAcc or WBAcc)
     if (perf_metric == 'BAcc' || perf_metric == 'WBAcc') {
+      
+      # Ignore NAs
+      resps <- .ignore_NA(y_pred = pred_resp,
+                          y_true = response)
+      pred_resp <- resps$y_pred
+      response <- resps$y_true
       
       # Balanced Accuracy for each class (each given by (TP/P + TN/N) / 2)
       bal_accs <- .comp_bal_accs(y_pred = pred_resp,
@@ -326,7 +332,17 @@ eforest <- function(response,
     ## Regression ##
     
     # Predicted response: average
-    pred_resp <- sapply(oob_pred_resp, mean)
+    pred_resp <- sapply(oob_pred_resp, 
+                        function(i) {
+                          if (length(i) == 0) return(NA) 
+                          else mean(i)
+                        })
+    
+    # Ignore NAs
+    resps <- .ignore_NA(y_pred = pred_resp,
+                        y_true = response)
+    pred_resp <- resps$y_pred
+    response <- resps$y_true
     
     # OOB performance metric: various choices (default is 'RMSPE')
     if (requireNamespace('MLmetrics', quietly = TRUE)) {
@@ -434,7 +450,7 @@ predict.eforest <- function(object, newdata = NULL, ...) {
 
 
 .comp_bal_accs <- function(y_pred,
-                          y_true) {
+                           y_true) {
   
   bal_accs <- sapply(levels(y_true),
                      function(lev) {
@@ -456,6 +472,20 @@ predict.eforest <- function(object, newdata = NULL, ...) {
   
   return(bal_accs)
   
+}
+
+.ignore_NA <- function(y_pred,
+                       y_true) {
   
+  # Indices of non-missing values
+  ok_idx <- which(!is.na(y_pred))
   
+  # Select from predictions and actual response
+  y_pred <- y_pred[ok_idx]
+  y_true <- y_true[ok_idx]
+  
+  # Return
+  return(list(y_pred = y_pred,
+              y_true = y_true))
+         
 }
