@@ -140,6 +140,7 @@ documentation provides more information about their definition.
 \donttest{
 
 ## Covariates
+set.seed(123)
 nobs <- 100
 cov_num <- rnorm(nobs)
 cov_nom <- factor(rbinom(nobs, size = 1, prob = 0.5))
@@ -153,15 +154,15 @@ y <- round((cov_num - min(cov_num)) / (max(cov_num) - min(cov_num)), 0)
 resp_cls <- factor(y)
 
 ## Regression ##
-eforest_fit <- eforest(response = resp_reg, covariates = cov_list, ntrees = 20)
+eforest_fit <- eforest(response = resp_reg, covariates = cov_list, ntrees = 12)
 print(eforest_fit$ensemble[[1]])
 plot(eforest_fit$ensemble[[1]])
 mean((resp_reg - predict(eforest_fit)) ^ 2)
 
 ## Classification ##
-eforest_fit <- eforest(response = resp_cls, covariates = cov_list, ntrees = 20)
-print(eforest_fit$ensemble[[20]])
-plot(eforest_fit$ensemble[[20]])
+eforest_fit <- eforest(response = resp_cls, covariates = cov_list, ntrees = 12)
+print(eforest_fit$ensemble[[12]])
+plot(eforest_fit$ensemble[[12]])
 table(resp_cls, predict(eforest_fit))
 }
 
