@@ -68,13 +68,12 @@
 #' \donttest{
 #' 
 #' ## Covariates
+#' set.seed(123)
 #' nobs <- 100
 #' cov_num <- rnorm(nobs)
 #' cov_nom <- factor(rbinom(nobs, size = 1, prob = 0.5))
 #' cov_gph <- lapply(1:nobs, function(j) igraph::sample_gnp(100, 0.2))
 #' cov_fun <- fda.usc::rproc2fdata(nobs, seq(0, 1, len = 100), sigma = 1)
-# x <- lapply(rep(100, nobs), function(np) TDA::circleUnif(np))
-# cov_per <- lapply(x, TDA::ripsDiag, maxdimension = 1, maxscale = 3)  
 #' cov_list <- list(cov_num, cov_nom, cov_gph, cov_fun)
 #' 
 #' ## Response variable(s)
@@ -83,15 +82,15 @@
 #' resp_cls <- factor(y)
 #' 
 #' ## Regression ##
-#' eforest_fit <- eforest(response = resp_reg, covariates = cov_list, ntrees = 20)
+#' eforest_fit <- eforest(response = resp_reg, covariates = cov_list, ntrees = 12)
 #' print(eforest_fit$ensemble[[1]])
 #' plot(eforest_fit$ensemble[[1]])
 #' mean((resp_reg - predict(eforest_fit)) ^ 2)
 #' 
 #' ## Classification ##
-#' eforest_fit <- eforest(response = resp_cls, covariates = cov_list, ntrees = 20)
-#' print(eforest_fit$ensemble[[20]])
-#' plot(eforest_fit$ensemble[[20]])
+#' eforest_fit <- eforest(response = resp_cls, covariates = cov_list, ntrees = 12)
+#' print(eforest_fit$ensemble[[12]])
+#' plot(eforest_fit$ensemble[[12]])
 #' table(resp_cls, predict(eforest_fit))
 #' }
 #'
@@ -299,7 +298,10 @@ eforest <- function(response,
     
     # Predicted response: majority voting rule
     pred_resp <- factor(sapply(oob_pred_resp,
-                               function(i) names(which.max(table(i)))
+                               function(i) {
+                                 if (length(i) == 0) return(NA) 
+                                 else names(which.max(table(i)))
+                               } 
     ))
     
     # OOB performance metric (measured via BAcc or WBAcc)
