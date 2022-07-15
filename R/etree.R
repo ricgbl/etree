@@ -106,7 +106,7 @@
 #' (for regression) in the two kid nodes.
 #' }
 #'
-#' @section Value:
+#' @returns
 #' An object of class \code{"etree"}, \code{"constparty"}, and \code{"party"}.
 #' It stores all the information about the fitted tree. Its elements can be
 #' individually accessed using the \code{$} operator. Their names and content
